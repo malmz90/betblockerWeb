@@ -26,7 +26,7 @@ Before removing, please consider:
 - Contact your support person or counselor
 - Call gambling helpline if needed
 
-Are you sure you want to remove this protection?
+
 ```
 
 **Effectiveness:** Medium - Creates pause for reflection
