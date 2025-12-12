@@ -132,7 +132,6 @@ export default function Home() {
 
   function handleDownloadProfile() {
     if (typeof window === "undefined") return;
-    // You can optionally add ?password=custom123 to set a custom password
     window.location.href = `/api/apple-profile`;
   }
 

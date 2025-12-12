@@ -2,13 +2,11 @@ import { randomUUID } from "crypto";
 import { readFile } from "fs/promises";
 import { spawn } from "child_process";
 import { join } from "path";
-import { createHash } from "crypto";
 
 const NEXTDNS_PROFILE_ID = process.env.NEXTDNS_PROFILE_ID;
 const SIGNING_CERT_PATH = process.env.SIGNING_CERT_PATH;
 const SIGNING_KEY_PATH = process.env.SIGNING_KEY_PATH;
 const SIGNING_CA_PATH = process.env.SIGNING_CA_PATH;
-const REMOVAL_PASSWORD = process.env.REMOVAL_PASSWORD;
 
 function createMobileConfig(removalPassword) {
   if (!NEXTDNS_PROFILE_ID) {
@@ -183,11 +181,7 @@ async function signMobileConfig(unsignedContent) {
 
 export async function GET(request) {
   try {
-    // Get optional removal password from query or env
-    const { searchParams } = new URL(request.url);
-    const removalPassword = searchParams.get("password") || REMOVAL_PASSWORD;
-
-    const unsignedConfig = createMobileConfig(removalPassword);
+    const unsignedConfig = createMobileConfig();
     const finalConfig = await signMobileConfig(unsignedConfig);
 
     const safeId = String(NEXTDNS_PROFILE_ID).replace(/[^a-zA-Z0-9_-]/g, "");
@@ -203,7 +197,6 @@ export async function GET(request) {
           : "application/x-apple-aspen-config",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "X-Profile-Signed": isSigned ? "true" : "false",
-        "X-Profile-Protected": removalPassword ? "true" : "false",
       },
     });
   } catch (error) {
