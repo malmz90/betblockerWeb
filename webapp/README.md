@@ -6,7 +6,6 @@ A Next.js web app that manages a universal DNS blocklist using NextDNS. All user
 
 - 🌐 **Universal Blocklist** - All users share the same blocklist
 - 📱 **iOS Focus** - Download `.mobileconfig` profile for easy setup
-- 🔐 **Removal Password** - Require password to uninstall (prevents impulsive removal)
 - 🔒 **Optional Signing** - Sign profiles with certificates for added trust
 - ⚡ **NextDNS Powered** - Uses NextDNS API for DNS-level blocking
 - 👥 **Multi-User** - Support 100+ users with no database needed
@@ -40,9 +39,6 @@ Edit `.env.local` with your credentials:
 # Required
 NEXTDNS_API_KEY=your_api_key_from_nextdns
 NEXTDNS_PROFILE_ID=your_profile_id
-
-# Optional: Add removal password (highly recommended for gambling blocking)
-REMOVAL_PASSWORD=MySecurePassword123
 
 # Optional (for signing)
 SIGNING_CERT_PATH=./certs/certificate.pem
@@ -92,21 +88,6 @@ See the full [Signing Guide](./SIGNING_GUIDE.md) for:
 - Apple Developer certificates (most trusted)
 - Detailed step-by-step instructions
 
-## Removal Protection
-
-⚠️ **Note:** iOS ignores removal passwords on consumer devices. Instead, we use psychological friction:
-
-1. Set `REMOVAL_PASSWORD=ContactYourSponsor` in `.env.local`
-2. Restart the server
-3. Users see a warning message with your text when removing
-
-**For true protection, combine with:**
-- 🔐 **iOS Screen Time** - Partner controls passcode
-- 👥 **Accountability apps** - Monitors for removal
-- 🏠 **Router-level blocking** - Can't bypass on home network
-- 📱 **Multiple DNS layers** - NextDNS app + profile
-
-See [PREVENTION_STRATEGIES.md](./PREVENTION_STRATEGIES.md) for effective multi-layer protection strategies.
 
 ## Deployment to Vercel
 
