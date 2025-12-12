@@ -1,32 +1,19 @@
- "use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 
 export default function Home() {
-  const [profileId, setProfileId] = useState("");
   const [domain, setDomain] = useState("");
   const [denylist, setDenylist] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [creatingProfile, setCreatingProfile] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const dnsHttps = profileId ? `https://dns.nextdns.io/${profileId}` : "";
-  const dnsHostname = profileId ? `${profileId}.dns.nextdns.io` : "";
-
+  // Fetch blocklist on mount
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const storedProfileId = window.localStorage.getItem("nextdnsProfileId");
-    if (storedProfileId) {
-      setProfileId(storedProfileId);
-    }
+    fetchDenylist();
   }, []);
-
-  useEffect(() => {
-    if (!profileId || typeof window === "undefined") return;
-    window.localStorage.setItem("nextdnsProfileId", profileId);
-  }, [profileId]);
 
   function normalizeDomain(input) {
     if (!input || typeof input !== "string") return "";
@@ -46,97 +33,13 @@ export default function Home() {
     return value;
   }
 
-  async function copyText(value, successMessage) {
-    if (!value || typeof window === "undefined" || !navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      setSuccess(successMessage);
-    } catch (e) {
-      setError("Could not copy to clipboard. Copy it manually from the text.");
-    }
-  }
-
-  async function copyProfileId() {
-    if (!profileId) return;
-    await copyText(
-      profileId,
-      "Configuration ID copied. Paste it into the NextDNS app or settings."
-    );
-  }
-
-  async function copyDnsHttps() {
-    if (!dnsHttps) return;
-    await copyText(
-      dnsHttps,
-      "DNS-over-HTTPS address copied. Paste it into DNS settings."
-    );
-  }
-
-  async function copyDnsHostname() {
-    if (!dnsHostname) return;
-    await copyText(
-      dnsHostname,
-      "DNS hostname copied. Paste it into Private DNS / DNS settings."
-    );
-  }
-
-  async function ensureProfile() {
-    if (profileId) {
-      return profileId;
-    }
-
-    setCreatingProfile(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const res = await fetch("/api/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(
-          data.error ||
-            "Could not create a NextDNS profile. Check the server API key."
-        );
-        return null;
-      }
-
-      if (!data.profileId) {
-        setError(
-          "Profile was created but no profile id was returned from the server."
-        );
-        return null;
-      }
-
-      setProfileId(data.profileId);
-      setSuccess("Created a private blocking profile for you.");
-      return data.profileId;
-    } catch (e) {
-      setError(
-        "Something went wrong while creating your NextDNS profile on the server."
-      );
-      return null;
-    } finally {
-      setCreatingProfile(false);
-    }
-  }
-
   async function fetchDenylist() {
-    const currentProfileId = profileId || (await ensureProfile());
-    if (!currentProfileId) return;
-
     setLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      const res = await fetch(`/api/blocklist?profileId=${currentProfileId}`);
+      const res = await fetch(`/api/blocklist`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -162,15 +65,12 @@ export default function Home() {
       return;
     }
 
-    const currentProfileId = profileId || (await ensureProfile());
-    if (!currentProfileId) return;
-
     setLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      const res = await fetch(`/api/blocklist?profileId=${currentProfileId}`, {
+      const res = await fetch(`/api/blocklist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,15 +96,12 @@ export default function Home() {
   }
 
   async function handleRemove(domainToRemove) {
-    const currentProfileId = profileId || (await ensureProfile());
-    if (!currentProfileId) return;
-
     setLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      const res = await fetch(`/api/blocklist?profileId=${currentProfileId}`, {
+      const res = await fetch(`/api/blocklist`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -233,144 +130,66 @@ export default function Home() {
     handleAdd();
   }
 
-  function handleSelfBlock() {
+  function handleDownloadProfile() {
     if (typeof window === "undefined") return;
-    try {
-      const url = new URL(window.location.href);
-      const hostname = url.hostname || "localhost";
-      handleAdd(hostname);
-    } catch (e) {
-      handleAdd("localhost");
-    }
+    // You can optionally add ?password=custom123 to set a custom password
+    window.location.href = `/api/apple-profile`;
   }
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <header className={styles.header}>
-          <h1>NextDNS Blocklist Tester</h1>
+          <h1>🛡️ Spelinsikt BetBlocker</h1>
           <p>
-            Add domains to your own NextDNS config to block them on your device.
-            Your testers do not need a NextDNS account &mdash; this app creates a
-            private profile for each browser using your API key.
+            A universal blocklist for blocking unwanted sites on iOS devices.
+            All users share the same blocklist.
           </p>
         </header>
 
-        {!profileId && (
-          <section className={styles.card}>
-            <div className={styles.fieldGroup}>
-              <label>Blocking profile</label>
-              <p className={styles.helperText}>
-                When you continue, this app will create a dedicated NextDNS
-                configuration under your main account and remember it only in
-                this browser. Your testers don&apos;t have to touch NextDNS.
-              </p>
+        <section className={styles.card}>
+          <div className={styles.fieldGroup}>
+            <label>📱 Setup Protection on iOS</label>
+            <p className={styles.helperText}>
+              <strong>Quick Setup:</strong> Download profile and install it manually.
+            </p>
+            <div className={styles.actionsRow}>
               <button
                 type="button"
-                onClick={ensureProfile}
-                disabled={creatingProfile}
+                onClick={handleDownloadProfile}
+                disabled={loading}
+                className={styles.primaryButton}
               >
-                {creatingProfile ? "Creating profile..." : "Create my profile"}
+                📥 Download iOS Profile
               </button>
             </div>
-          </section>
-        )}
-
-        {profileId && (
-          <section className={styles.card}>
-            <div className={styles.fieldGroup}>
-              <label>Connect this device to your blocking profile</label>
-              <p className={styles.helperText}>
-                You have two ways to activate blocking on this device. Choose
-                the one that feels easiest.
-              </p>
-
-              <p className={styles.helperText}>
-                <strong>Option 1 – NextDNS app (easiest)</strong>
-              </p>
-              <p className={styles.helperText}>
-                1. Download the free NextDNS app for your device (macOS, iOS,
-                Android).{" "}
-              </p>
-              <p className={styles.helperText}>
-                2. Open the app, enable{" "}
-                <strong>Use custom configuration</strong> and paste this
-                configuration ID:
-              </p>
-              <code className={styles.code}>{profileId}</code>
-              <div className={styles.actionsRow}>
-                <button type="button" onClick={copyProfileId} disabled={loading}>
-                  Copy configuration ID
-                </button>
-              </div>
-              <p className={styles.helperText}>
-                Once the app is enabled with this ID, any domain you block here
-                will be blocked on this device.
-              </p>
-
-              <p className={styles.helperText}>
-                <strong>Option 2 – Configure DNS manually</strong>
-              </p>
-              <p className={styles.helperText}>
-                <strong>iOS</strong>: Settings → General → VPN, DNS &amp; Device
-                Management → DNS → Configure DNS. Use manual and paste:
-              </p>
-              <code className={styles.code}>{dnsHttps}</code>
-              <div className={styles.actionsRow}>
-                <button
-                  type="button"
-                  onClick={copyDnsHttps}
-                  disabled={loading || !dnsHttps}
-                >
-                  Copy iOS DNS address
-                </button>
-              </div>
-              <p className={styles.helperText}>
-                <strong>Android</strong>: Settings → Network &amp; internet →
-                Private DNS → Private DNS provider hostname. Use:
-              </p>
-              <code className={styles.code}>{dnsHostname}</code>
-              <div className={styles.actionsRow}>
-                <button
-                  type="button"
-                  onClick={copyDnsHostname}
-                  disabled={loading || !dnsHostname}
-                >
-                  Copy Android DNS hostname
-                </button>
-              </div>
-              <p className={styles.helperText}>
-                After DNS is set to this profile, gambling sites you add here
-                will stop working on that device.
-              </p>
-              <p className={styles.helperText}>
-                <strong>Apple profile (automatic for iOS / macOS)</strong>
-              </p>
-              <p className={styles.helperText}>
-                Download a configuration profile that sets DNS for you (works on
-                Apple devices, similar to what NextDNS generates on{" "}
-                <code>apple.nextdns.io</code>).
-              </p>
-              <div className={styles.actionsRow}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!profileId || typeof window === "undefined") return;
-                    window.location.href = `/api/apple-profile?profileId=${profileId}`;
-                  }}
-                  disabled={loading || !profileId}
-                >
-                  Download Apple profile (.mobileconfig)
-                </button>
-              </div>
+            <p className={styles.helperText}>
+              After downloading: Settings → Profile Downloaded → Install
+            </p>
+            
+            <div className={styles.divider}></div>
+            
+            <p className={styles.helperText}>
+              <strong>⭐ Maximum Protection:</strong> Prevent profile removal with iOS Screen Time
+            </p>
+            <div className={styles.actionsRow}>
+              <a
+                href="/setup-guide"
+                className={styles.secondaryButton}
+              >
+                🔐 Enable Complete Protection Setup
+              </a>
             </div>
-          </section>
-        )}
+            <p className={styles.helperText}>
+              Recommended: Follow our guided setup with your accountability partner to enable Screen Time restrictions that prevent profile removal.
+            </p>
+          </div>
+        </section>
 
         <section className={styles.card}>
           <form onSubmit={handleSubmit} className={styles.formRow}>
             <div className={styles.fieldGroupInline}>
-              <label htmlFor="domain">Domain to block</label>
+              <label htmlFor="domain">Add Domain to Universal Blocklist</label>
               <input
                 id="domain"
                 type="text"
@@ -381,7 +200,7 @@ export default function Home() {
             </div>
             <div className={styles.actionsRow}>
               <button type="submit" disabled={loading}>
-                Block
+                🚫 Block Domain
               </button>
             </div>
           </form>
@@ -389,25 +208,28 @@ export default function Home() {
 
         {(error || success) && (
           <section className={styles.card}>
-            {error && <p className={styles.error}>{error}</p>}
-            {success && <p className={styles.success}>{success}</p>}
+            {error && <p className={styles.error}>❌ {error}</p>}
+            {success && <p className={styles.success}>✅ {success}</p>}
           </section>
         )}
 
         <section className={styles.card}>
           <div className={styles.listHeader}>
-            <h2>Current blocklist</h2>
+            <h2>🌐 Universal Blocklist</h2>
             <button
               type="button"
               onClick={fetchDenylist}
               disabled={loading}
             >
-              Refresh
+              🔄 Refresh
             </button>
           </div>
+          <p className={styles.helperText}>
+            These domains are blocked for all users who have installed the profile.
+          </p>
           {denylist.length === 0 ? (
             <p className={styles.helperText}>
-              No entries loaded yet. Load your blocklist above or add a domain.
+              No domains blocked yet. Add one above to get started.
             </p>
           ) : (
             <ul className={styles.list}>
@@ -416,7 +238,7 @@ export default function Home() {
                 const label = typeof item === "string" ? item : item.id || item.host;
                 return (
                   <li key={key} className={styles.listItem}>
-                    <span>{label}</span>
+                    <span>🔒 {label}</span>
                     <button
                       type="button"
                       className={styles.linkButton}
@@ -431,8 +253,11 @@ export default function Home() {
             </ul>
           )}
         </section>
+
+        <footer className={styles.footer}>
+          <p>Powered by NextDNS • All users share the same blocklist</p>
+        </footer>
       </main>
     </div>
   );
 }
-

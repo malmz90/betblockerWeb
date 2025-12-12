@@ -1,4 +1,5 @@
 const NEXTDNS_API_KEY = process.env.NEXTDNS_API_KEY;
+const NEXTDNS_PROFILE_ID = process.env.NEXTDNS_PROFILE_ID;
 
 async function callNextDns(path, options = {}) {
   if (!NEXTDNS_API_KEY) {
@@ -7,6 +8,16 @@ async function callNextDns(path, options = {}) {
       status: 500,
       json: async () => ({
         error: "NEXTDNS_API_KEY is not configured on the server",
+      }),
+    };
+  }
+
+  if (!NEXTDNS_PROFILE_ID) {
+    return {
+      ok: false,
+      status: 500,
+      json: async () => ({
+        error: "NEXTDNS_PROFILE_ID is not configured on the server",
       }),
     };
   }
@@ -24,18 +35,8 @@ async function callNextDns(path, options = {}) {
 }
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const profileId = searchParams.get("profileId");
-
-  if (!profileId) {
-    return Response.json(
-      { error: "Missing required query parameter: profileId" },
-      { status: 400 }
-    );
-  }
-
   const response = await callNextDns(
-    `/profiles/${encodeURIComponent(profileId)}/denylist`,
+    `/profiles/${encodeURIComponent(NEXTDNS_PROFILE_ID)}/denylist`,
     { method: "GET" }
   );
 
@@ -61,16 +62,6 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const { searchParams } = new URL(request.url);
-  const profileId = searchParams.get("profileId");
-
-  if (!profileId) {
-    return Response.json(
-      { error: "Missing required query parameter: profileId" },
-      { status: 400 }
-    );
-  }
-
   const body = await request.json().catch(() => null);
   const domain = body?.domain;
 
@@ -82,7 +73,7 @@ export async function POST(request) {
   }
 
   const response = await callNextDns(
-    `/profiles/${encodeURIComponent(profileId)}/denylist`,
+    `/profiles/${encodeURIComponent(NEXTDNS_PROFILE_ID)}/denylist`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -106,22 +97,12 @@ export async function POST(request) {
   }
 
   return Response.json(
-    { message: `Domain ${domain} added to blocklist.` },
+    { message: `Domain ${domain} added to universal blocklist.` },
     { status: 200 }
   );
 }
 
 export async function DELETE(request) {
-  const { searchParams } = new URL(request.url);
-  const profileId = searchParams.get("profileId");
-
-  if (!profileId) {
-    return Response.json(
-      { error: "Missing required query parameter: profileId" },
-      { status: 400 }
-    );
-  }
-
   const body = await request.json().catch(() => null);
   const domain = body?.domain;
 
@@ -133,7 +114,7 @@ export async function DELETE(request) {
   }
 
   const response = await callNextDns(
-    `/profiles/${encodeURIComponent(profileId)}/denylist/${encodeURIComponent(
+    `/profiles/${encodeURIComponent(NEXTDNS_PROFILE_ID)}/denylist/${encodeURIComponent(
       domain
     )}`,
     {
@@ -155,9 +136,7 @@ export async function DELETE(request) {
   }
 
   return Response.json(
-    { message: `Domain ${domain} removed from blocklist.` },
+    { message: `Domain ${domain} removed from universal blocklist.` },
     { status: 200 }
   );
 }
-
-
