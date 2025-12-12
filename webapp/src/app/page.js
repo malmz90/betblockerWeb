@@ -149,9 +149,9 @@ export default function Home() {
 
         <section className={styles.card}>
           <div className={styles.fieldGroup}>
-            <label>📱 Setup Protection on iOS</label>
+            <label>📱 Setup on iOS Device</label>
             <p className={styles.helperText}>
-              <strong>Quick Setup:</strong> Download profile and install it manually.
+              <strong>Step 1:</strong> Download and install the DNS profile
             </p>
             <div className={styles.actionsRow}>
               <button
@@ -160,28 +160,17 @@ export default function Home() {
                 disabled={loading}
                 className={styles.primaryButton}
               >
-                📥 Download iOS Profile
+                📥 Download iOS Profile (.mobileconfig)
               </button>
             </div>
             <p className={styles.helperText}>
-              After downloading: Settings → Profile Downloaded → Install
+              <strong>Step 2:</strong> After downloading, go to Settings → Profile Downloaded → Install
             </p>
-            
-            <div className={styles.divider}></div>
-            
             <p className={styles.helperText}>
-              <strong>⭐ Maximum Protection:</strong> Prevent profile removal with iOS Screen Time
+              <strong>Step 3:</strong> Enter your passcode and tap "Install"
             </p>
-            <div className={styles.actionsRow}>
-              <a
-                href="/setup-guide"
-                className={styles.secondaryButton}
-              >
-                🔐 Enable Complete Protection Setup
-              </a>
-            </div>
             <p className={styles.helperText}>
-              Recommended: Follow our guided setup with your accountability partner to enable Screen Time restrictions that prevent profile removal.
+              Once installed, all domains in the blocklist below will be blocked on your device.
             </p>
           </div>
         </section>
